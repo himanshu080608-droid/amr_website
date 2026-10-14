@@ -1,0 +1,1255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ros_lidar_bot — Autonomous Robot Hardware Architecture & Engineering Specification</title>
+  <meta name="description" content="Technical hardware architecture, electrical wiring, DDSM115 direct-drive motors, RPLidar S2E Ethernet perception, BNO055 IMU fusion, and engineering calculators for Ros_lidar_bot.">
+  <meta name="keywords" content="ROS 2 Jazzy, Raspberry Pi 5, DDSM115, RPLidar S2E, BNO055, SLAM, Autonomous Robot, Hardware Architecture">
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,600;0,800;1,400&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="dark-theme">
+  <!-- Scanline & Background Glow -->
+  <div class="cyber-grid-overlay"></div>
+  <div class="glow-orb orb-1"></div>
+  <div class="glow-orb orb-2"></div>
+  <div class="glow-orb orb-3"></div>
+
+  <!-- Main Navigation Bar -->
+  <header class="navbar" id="main-navbar">
+    <div class="nav-container">
+      <a href="#hero" class="brand-logo" id="brand-logo-link">
+        <span class="logo-icon">⬡</span>
+        <div class="brand-text">
+          <span class="brand-name">ROS_LIDAR_BOT</span>
+          <span class="brand-tag">HARDWARE SPEC // REV 2.4</span>
+        </div>
+      </a>
+
+      <nav class="nav-links" id="desktop-nav">
+        <a href="#hero" class="nav-link active">Overview</a>
+        <a href="#rig-explorer" class="nav-link">Interactive Rig</a>
+        <a href="#topology" class="nav-link">Bus Topology</a>
+        <a href="#subsystems" class="nav-link">Subsystems</a>
+        <a href="#wiring-pinouts" class="nav-link">Wiring & Ports</a>
+        <a href="#protocol-inspector" class="nav-link">Binary Protocols</a>
+        <a href="#calculators" class="nav-link">Calculators</a>
+        <a href="#bom-section" class="nav-link">BOM Matrix</a>
+        <a href="#bringup" class="nav-link">Bring-up</a>
+        <a href="#troubleshooting" class="nav-link">Diagnostics</a>
+      </nav>
+
+      <div class="nav-actions">
+        <div class="status-indicator" id="system-status-pill" title="Hardware Bus Status">
+          <span class="status-dot pulsing"></span>
+          <span class="status-label">HARDWARE NOMINAL</span>
+        </div>
+        <a href="http://192.168.11.1:8080" target="_blank" rel="noopener" class="btn-dashboard" id="btn-ros-dashboard">
+          <span>Live GUI :8080</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <main>
+    <section class="hero-section" id="hero">
+      <div class="container hero-grid">
+        <div class="hero-content">
+          <div class="hero-badge">
+            <span class="badge-dot"></span>
+            <span>ROS 2 JAZZY // REAL PHYSICAL HARDWARE STACK</span>
+          </div>
+          <h1 class="hero-title">
+            Direct-Drive Autonomous <span class="gradient-text">LiDAR Mobile Robot</span>
+          </h1>
+          <p class="hero-description">
+            A high-precision differential-drive robotics platform engineered with zero-backlash DDSM115 smart hub motors over RS485, high-speed RPLidar S2E over Ethernet UDP, a 500,000-baud BNO055 IMU fusion bridge, and active 2-DOF semantic vision.
+          </p>
+
+          <!-- Quick Metrics Bar -->
+          <div class="hero-metrics">
+            <div class="metric-card">
+              <span class="metric-value">100.7 <small>mm</small></span>
+              <span class="metric-label">Direct-Drive Hub Wheels</span>
+            </div>
+            <div class="metric-card">
+              <span class="metric-value">3,200 <small>pts/rev</small></span>
+              <span class="metric-label">Ethernet DenseBoost Scan</span>
+            </div>
+            <div class="metric-card">
+              <span class="metric-value">500 <small>kBd</small></span>
+              <span class="metric-label">IMU Serial Telemetry</span>
+            </div>
+            <div class="metric-card">
+              <span class="metric-value">0.28 / 0.40 <small>m</small></span>
+              <span class="metric-label">Radius / Safety Stop Envelope</span>
+            </div>
+          </div>
+
+          <div class="hero-cta-group">
+            <a href="#rig-explorer" class="btn-primary" id="btn-explore-rig">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polygon points="10 8 16 12 10 16 10 8"></polygon></svg>
+              <span>Explore Interactive Rig</span>
+            </a>
+            <a href="#wiring-pinouts" class="btn-secondary" id="btn-view-pinouts">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+              <span>Wiring & Ports Guide</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Hero Graphic: Live Radar & Chassis Simulation -->
+        <div class="hero-graphic-container">
+          <div class="radar-card">
+            <div class="radar-header">
+              <span class="terminal-dot red"></span>
+              <span class="terminal-dot yellow"></span>
+              <span class="terminal-dot green"></span>
+              <span class="radar-title">PERCEPTION BUS & KINEMATICS RADAR</span>
+              <span class="radar-rate">10 Hz // UDP S2E</span>
+            </div>
+            <div class="radar-canvas-wrapper">
+              <canvas id="heroRadarCanvas" width="460" height="420"></canvas>
+              <div class="radar-hud-overlay">
+                <div class="hud-item hud-tl">RPLIDAR S2E: 192.168.11.2</div>
+                <div class="hud-item hud-tr">SAFETY MARGIN: 0.40m</div>
+                <div class="hud-item hud-bl">WHEELBASE: 0.33m</div>
+                <div class="hud-item hud-br">CHASSIS: R=0.28m</div>
+              </div>
+            </div>
+            <div class="radar-controls">
+              <button class="btn-radar-toggle" id="btnRadarMode">Switch View: <span>DenseBoost Scan</span></button>
+              <button class="btn-radar-toggle" id="btnSimulateObstacle">Simulate Obstacle</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 2: INTERACTIVE HARDWARE RIG EXPLORER -->
+    <section class="section-container" id="rig-explorer">
+      <div class="section-header">
+        <span class="section-tag">PHYSICAL ARCHITECTURE</span>
+        <h2 class="section-title">Interactive Robot Hardware Rig</h2>
+        <p class="section-subtitle">Click on any sensor or actuator module on the chassis schematic to inspect hardware specifications, pin connections, and ROS 2 topic pipelines.</p>
+      </div>
+
+      <div class="rig-explorer-grid">
+        <!-- Interactive Chassis Visualizer -->
+        <div class="rig-canvas-card">
+          <div class="rig-canvas-header">
+            <div class="rig-status-pill">
+              <span class="indicator-led online"></span>
+              <span>CHASSIS SCHEMATIC (TOP-DOWN)</span>
+            </div>
+            <div class="canvas-legend">
+              <span class="legend-item"><span class="dot cyan"></span> Sensors</span>
+              <span class="legend-item"><span class="dot orange"></span> Actuators</span>
+              <span class="legend-item"><span class="dot purple"></span> Compute</span>
+            </div>
+          </div>
+
+          <div class="rig-interactive-wrapper">
+            <svg id="robotChassisSvg" viewBox="0 0 600 600" class="chassis-svg">
+              <defs>
+                <radialGradient id="chassisGlow" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stop-color="#00f2fe" stop-opacity="0.15" />
+                  <stop offset="100%" stop-color="#00f2fe" stop-opacity="0" />
+                </radialGradient>
+                <filter id="neonFilter" x="-20%" y="-20%" width="140%" height="140%">
+                  <feGaussianBlur stdDeviation="4" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+              </defs>
+
+              <!-- Safety Envelope Boundary (0.40m = 260px) -->
+              <circle cx="300" cy="300" r="260" class="svg-envelope-safety" stroke-dasharray="6,6" />
+              <text x="310" y="55" class="svg-label-dim">SAFETY BUFFER (0.40 m)</text>
+
+              <!-- Physical Chassis Body (0.28m = 182px radius) -->
+              <circle cx="300" cy="300" r="182" class="svg-chassis-outline" />
+              <circle cx="300" cy="300" r="182" fill="url(#chassisGlow)" />
+              <text x="310" y="132" class="svg-label-dim">CHASSIS BOUNDARY (0.28 m)</text>
+
+              <!-- Wheel Axle & Track Width Reference (0.33m = 215px) -->
+              <line x1="120" y1="300" x2="480" y2="300" class="svg-axis-line" stroke-dasharray="4,4" />
+              <text x="300" y="325" text-anchor="middle" class="svg-label-dim">WHEELBASE 0.33 m</text>
+
+              <!-- Forward Orientation Arrow -->
+              <path d="M 300 230 L 290 250 L 310 250 Z" class="svg-heading-arrow" />
+              <text x="300" y="220" text-anchor="middle" class="svg-heading-text">FORWARD (+X)</text>
+
+              <!-- Left DDSM115 Motor Wheel (Hotspot 1) -->
+              <g class="hotspot-group" data-module="left-motor" tabindex="0" role="button" aria-label="Left DDSM115 Motor">
+                <rect x="90" y="240" width="30" height="120" rx="6" class="svg-wheel wheel-left" />
+                <circle cx="105" cy="300" r="14" class="hotspot-dot orange-pulse" />
+                <text x="105" y="380" text-anchor="middle" class="svg-node-label">LEFT MOTOR (ID: 0x01)</text>
+              </g>
+
+              <!-- Right DDSM115 Motor Wheel (Hotspot 2) -->
+              <g class="hotspot-group" data-module="right-motor" tabindex="0" role="button" aria-label="Right DDSM115 Motor">
+                <rect x="480" y="240" width="30" height="120" rx="6" class="svg-wheel wheel-right" />
+                <circle cx="495" cy="300" r="14" class="hotspot-dot orange-pulse" />
+                <text x="495" y="380" text-anchor="middle" class="svg-node-label">RIGHT MOTOR (ID: 0x02)</text>
+              </g>
+
+              <!-- Front Caster Wheel -->
+              <circle cx="300" cy="150" r="16" class="svg-caster" />
+              <text x="300" y="180" text-anchor="middle" class="svg-node-sublabel">Front Caster</text>
+
+              <!-- Rear Caster Wheel -->
+              <circle cx="300" cy="450" r="16" class="svg-caster" />
+              <text x="300" y="480" text-anchor="middle" class="svg-node-sublabel">Rear Caster</text>
+
+              <!-- Raspberry Pi 5 Central Board (Hotspot 3) -->
+              <g class="hotspot-group" data-module="rpi5" tabindex="0" role="button" aria-label="Raspberry Pi 5">
+                <rect x="235" y="255" width="130" height="90" rx="8" class="svg-rpi5-board" />
+                <circle cx="300" cy="300" r="12" class="hotspot-dot purple-pulse" />
+                <text x="300" y="280" text-anchor="middle" class="svg-board-title">RASPBERRY PI 5</text>
+                <text x="300" y="298" text-anchor="middle" class="svg-board-sub">UBUNTU 24.04 // JAZZY</text>
+              </g>
+
+              <!-- Slamtec RPLidar S2E Ethernet (Hotspot 4) -->
+              <g class="hotspot-group" data-module="rplidar" tabindex="0" role="button" aria-label="RPLidar S2E">
+                <circle cx="300" cy="200" r="32" class="svg-lidar-body" />
+                <circle cx="300" cy="200" r="22" class="svg-lidar-inner" />
+                <circle cx="300" cy="200" r="8" class="hotspot-dot cyan-pulse" />
+                <text x="300" y="160" text-anchor="middle" class="svg-node-label highlight-cyan">RPLIDAR S2E (ETHERNET)</text>
+              </g>
+
+              <!-- BNO055 IMU + Arduino Mega (Hotspot 5) -->
+              <g class="hotspot-group" data-module="bno055" tabindex="0" role="button" aria-label="BNO055 IMU">
+                <rect x="250" y="360" width="100" height="42" rx="4" class="svg-imu-board" />
+                <circle cx="300" cy="381" r="9" class="hotspot-dot yellow-pulse" />
+                <text x="300" y="386" text-anchor="middle" class="svg-imu-text">BNO055 + MEGA</text>
+                <text x="300" y="418" text-anchor="middle" class="svg-node-sublabel">500,000 baud</text>
+              </g>
+
+              <!-- 2-DOF Pan/Tilt Camera Head + Buzzer (Hotspot 6) -->
+              <g class="hotspot-group" data-module="camera-head" tabindex="0" role="button" aria-label="Camera Pan Tilt Head">
+                <circle cx="300" cy="115" r="20" class="svg-gimbal-base" />
+                <rect x="285" y="98" width="30" height="15" rx="3" class="svg-cam-lens" />
+                <circle cx="300" cy="115" r="8" class="hotspot-dot green-pulse" />
+                <text x="300" y="85" text-anchor="middle" class="svg-node-label highlight-green">PAN/TILT HEAD + RPi CAM 3</text>
+              </g>
+            </svg>
+          </div>
+          <div class="rig-canvas-footer">
+            <span>Click any highlighted sensor or motor on the diagram to inspect its dedicated specifications.</span>
+          </div>
+        </div>
+
+        <!-- Dynamic Module Details Panel -->
+        <div class="rig-details-card" id="rigDetailsPanel">
+          <div class="details-header">
+            <span class="module-chip" id="detailModuleChip">POWERTRAIN MODULE</span>
+            <h3 class="module-title" id="detailModuleTitle">DDSM115 Direct-Drive Smart Hub Motors</h3>
+          </div>
+
+          <div class="details-body">
+            <p class="module-desc" id="detailModuleDesc">
+              Two direct-drive brushless hub motors communicating over an RS485 half-duplex bus via a USB-RS485 dongle at 115,200 baud. By coupling the rubber wheel directly to the motor rotor, mechanical backlash is entirely eliminated.
+            </p>
+
+            <div class="specs-mini-table" id="detailModuleSpecs">
+              <div class="spec-row">
+                <span class="spec-k">Interface / Port</span>
+                <span class="spec-v code-font">RS485 half-duplex → /dev/ttyACM0</span>
+              </div>
+              <div class="spec-row">
+                <span class="spec-k">Wheel Dimensions</span>
+                <span class="spec-v">⌀100.7 mm diameter, 0.33 m track width</span>
+              </div>
+              <div class="spec-row">
+                <span class="spec-k">Protocol & Safety</span>
+                <span class="spec-v code-font">10-byte binary packets (CRC8/MAXIM)</span>
+              </div>
+              <div class="spec-row">
+                <span class="spec-k">Min RPM / Limits</span>
+                <span class="spec-v">≈6 RPM minimum reliable threshold</span>
+              </div>
+              <div class="spec-row">
+                <span class="spec-k">ROS 2 Driver Node</span>
+                <span class="spec-v code-font">driver_node.py (subscribes /cmd_vel_safe)</span>
+              </div>
+            </div>
+
+            <!-- Quick Action Links -->
+            <div class="details-actions">
+              <a href="#protocol-inspector" class="btn-detail-link" id="btnInspectPacket">
+                <span>View 10-Byte Packet Inspector →</span>
+              </a>
+              <a href="#wiring-pinouts" class="btn-detail-link" id="btnWiringShortcut">
+                <span>Wiring & Pinout Map →</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 3: SYSTEM HARDWARE & BUS TOPOLOGY -->
+    <section class="section-container" id="topology">
+      <div class="section-header">
+        <span class="section-tag">COMMUNICATION PIPELINE</span>
+        <h2 class="section-title">Hardware Interconnect & Electrical Bus Topology</h2>
+        <p class="section-subtitle">A high-bandwidth, isolated communication architecture preventing kernel bus collisions between dense LiDAR point clouds and real-time motor odometry.</p>
+      </div>
+
+      <div class="topology-matrix-grid">
+        <!-- Channel 1: Ethernet UDP LiDAR -->
+        <div class="bus-card card-ethernet">
+          <div class="bus-badge">HIGH-SPEED PERCEPTION BUS</div>
+          <div class="bus-header">
+            <div class="bus-icon">🌐</div>
+            <div class="bus-info">
+              <h4>Gigabit Ethernet (UDP Socket)</h4>
+              <span class="code-font">eth0: 192.168.11.1/24 → 192.168.11.2:8089</span>
+            </div>
+          </div>
+          <div class="bus-specs">
+            <div class="bus-spec-item">
+              <span class="label">Connected Device</span>
+              <span class="val">Slamtec RPLidar S2E</span>
+            </div>
+            <div class="bus-spec-item">
+              <span class="label">Data Mode</span>
+              <span class="val">DenseBoost (~3200 pts/rev @ 10 Hz)</span>
+            </div>
+            <div class="bus-spec-item">
+              <span class="label">Latency Benefit</span>
+              <span class="val">Zero USB serial buffer drops or packet truncation</span>
+            </div>
+            <div class="bus-spec-item">
+              <span class="label">ROS 2 Driver</span>
+              <span class="val code-font">sllidar_ros2 (Ethernet UDP client)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Channel 2: RS485 Motor Bus -->
+        <div class="bus-card card-rs485">
+          <div class="bus-badge">HALF-DUPLEX ACTUATION BUS</div>
+          <div class="bus-header">
+            <div class="bus-icon">⚡</div>
+            <div class="bus-info">
+              <h4>RS485 Differential Bus (USB Dongle)</h4>
+              <span class="code-font">/dev/ttyACM0 @ 115,200 baud (8N1)</span>
+            </div>
+          </div>
+          <div class="bus-specs">
+            <div class="bus-spec-item">
+              <span class="label">Connected Device</span>
+              <span class="val">2× DDSM115 Hub Motors (IDs 0x01 & 0x02)</span>
+            </div>
+            <div class="bus-spec-item">
+              <span class="label">Guard Delay</span>
+              <span class="val">2 ms inter-motor transmission delay</span>
+            </div>
+            <div class="bus-spec-item">
+              <span class="label">Safety Verification</span>
+              <span class="val">CRC-8/MAXIM checksum on every 10-byte packet</span>
+            </div>
+            <div class="bus-spec-item">
+              <span class="label">Feedback Stream</span>
+              <span class="val code-font">Current, RPM, Position to /encoder (20 Hz)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Channel 3: High-Speed IMU Serial -->
+        <div class="bus-card card-imu">
+          <div class="bus-badge">DEDICATED ODOMETRY STREAM</div>
+          <div class="bus-header">
+            <div class="bus-icon">🧭</div>
+            <div class="bus-info">
+              <h4>High-Speed UART Bridge (Arduino Mega)</h4>
+              <span class="code-font">/dev/ttyACM1 @ 500,000 baud (8N1)</span>
+            </div>
+          </div>
+          <div class="bus-specs">
+            <div class="bus-spec-item">
+              <span class="label">Connected Device</span>
+              <span class="val">Bosch BNO055 9-DOF Intelligent IMU</span>
+            </div>
+            <div class="bus-spec-item">
+              <span class="label">Sampling Rate</span>
+              <span class="val">50 Hz published to /imu</span>
+            </div>
+            <div class="bus-spec-item">
+              <span class="label">Fusion Consumer</span>
+              <span class="val code-font">ekf_filter_node (robot_localization)</span>
+            </div>
+            <div class="bus-spec-item">
+              <span class="label">Why Arduino Mega?</span>
+              <span class="val">Dedicated hardware interrupt handling without Pi OS jitter</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Channel 4: Camera Head & Audio PWM -->
+        <div class="bus-card card-gimbal">
+          <div class="bus-badge">VISION GIMBAL & ACOUSTIC ALERT</div>
+          <div class="bus-header">
+            <div class="bus-icon">📷</div>
+            <div class="bus-info">
+              <h4>Hardware Timer PWM (Arduino Uno)</h4>
+              <span class="code-font">/dev/ttyUSB0 @ 115,200 baud (ASCII)</span>
+            </div>
+          </div>
+          <div class="bus-specs">
+            <div class="bus-spec-item">
+              <span class="label">Pan Servo</span>
+              <span class="val">OT5320M Continuous (Pin D6)</span>
+            </div>
+            <div class="bus-spec-item">
+              <span class="label">Tilt Servo</span>
+              <span class="val">SG90 Positional PWM (Pin D5)</span>
+            </div>
+            <div class="bus-spec-item">
+              <span class="label">Proximity Alarm</span>
+              <span class="val">Piezo Buzzer (Pin D9, Timer 1 PWM)</span>
+            </div>
+            <div class="bus-spec-item">
+              <span class="label">Safety Rule</span>
+              <span class="val">External 7.4V/5V supply; never power from Uno 5V!</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 4: SUBSYSTEM DEEP DIVES -->
+    <section class="section-container" id="subsystems">
+      <div class="section-header">
+        <span class="section-tag">ENGINEERING SPECIFICATIONS</span>
+        <h2 class="section-title">Hardware Subsystems & Components</h2>
+        <p class="section-subtitle">Deep technical dive into each custom-engineered module running on the physical robot chassis.</p>
+      </div>
+
+      <!-- Tabbed Subsystem Explorer -->
+      <div class="subsystem-tabs-container">
+        <div class="tab-buttons" role="tablist">
+          <button class="tab-btn active" data-tab="tab-motors" role="tab" id="btn-tab-motors">DDSM115 Hub Motors</button>
+          <button class="tab-btn" data-tab="tab-lidar" role="tab" id="btn-tab-lidar">RPLidar S2E</button>
+          <button class="tab-btn" data-tab="tab-imu" role="tab" id="btn-tab-imu">BNO055 IMU + Mega</button>
+          <button class="tab-btn" data-tab="tab-camera" role="tab" id="btn-tab-camera">Gimbal & Cam 3</button>
+          <button class="tab-btn" data-tab="tab-compute" role="tab" id="btn-tab-compute">Raspberry Pi 5 Core</button>
+        </div>
+
+        <div class="tab-content active" id="tab-motors">
+          <div class="subsystem-card-grid">
+            <div class="subsystem-card-text">
+              <h3>DDSM115 Direct-Drive Smart Hub Motors</h3>
+              <p>Traditional mobile robots rely on planetary or spur gearboxes that develop backlash over time, degrading odometry calculations during reversals. Ros_lidar_bot integrates <strong>DDSM115 direct-drive smart motors</strong> where the high-traction rubber wheel is mounted directly onto the motor's outer rotor.</p>
+              
+              <div class="feature-bullets">
+                <div class="bullet-item">
+                  <span class="bullet-icon">✔</span>
+                  <div><strong>Integrated Driver & Encoder:</strong> Internal 3-phase FOC driver, magnetic rotary encoder, and thermal protection built directly inside each hub.</div>
+                </div>
+                <div class="bullet-item">
+                  <span class="bullet-icon">✔</span>
+                  <div><strong>RS485 Half-Duplex Bus:</strong> Addressed via IDs (0x01 for Left, 0x02 for Right) with strict 2 ms inter-query guard timing to prevent bus arbitration clash.</div>
+                </div>
+                <div class="bullet-item">
+                  <span class="bullet-icon">✔</span>
+                  <div><strong>Low-Speed Threshold:</strong> Smooth linear control down to ≈6 RPM. Below 6 RPM, the motor deadband requires customized velocity feedforward ramps.</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="subsystem-card-data">
+              <div class="data-block">
+                <span class="data-title">Powertrain Specifications</span>
+                <table class="specs-table">
+                  <tr><td>Wheel Outer Diameter</td><td><strong>100.7 mm</strong> (0.1007 m)</td></tr>
+                  <tr><td>Wheelbase Track Width</td><td><strong>330 mm</strong> (0.33 m)</td></tr>
+                  <tr><td>Rated Voltage</td><td><strong>12 V – 24 V DC</strong></td></tr>
+                  <tr><td>Nominal Torque</td><td><strong>1.2 N·m</strong> (Peak 2.0 N·m)</td></tr>
+                  <tr><td>Max Speed</td><td><strong>115 RPM</strong> (~0.60 m/s linear velocity)</td></tr>
+                  <tr><td>Encoder Resolution</td><td><strong>12-bit</strong> (0–255 position byte / 360°)</td></tr>
+                  <tr><td>Communication Protocol</td><td><strong>10-Byte Binary Frame (CRC8/MAXIM)</strong></td></tr>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-content" id="tab-lidar">
+          <div class="subsystem-card-grid">
+            <div class="subsystem-card-text">
+              <h3>Slamtec RPLidar S2E (Ethernet/UDP)</h3>
+              <p>While standard consumer robots use USB-serial LiDARs susceptible to packet buffering drops under heavy CPU load, Ros_lidar_bot deploys the <strong>RPLidar S2E Industrial Ethernet</strong> unit connected to the Pi’s native Gigabit Ethernet port.</p>
+              
+              <div class="feature-bullets">
+                <div class="bullet-item">
+                  <span class="bullet-icon">✔</span>
+                  <div><strong>DenseBoost Mode:</strong> Runs at full optical angular resolution, delivering ~3200 sample points per 360° revolution at 10 Hz for crisp SLAM occupancy grids.</div>
+                </div>
+                <div class="bullet-item">
+                  <span class="bullet-icon">✔</span>
+                  <div><strong>Ambient Light Resistance:</strong> Modulated TOF (Time-of-Flight) laser optics with 80,000 Lux ambient light immunity, enabling mapping near bright windows.</div>
+                </div>
+                <div class="bullet-item">
+                  <span class="bullet-icon">✔</span>
+                  <div><strong>Dedicated Network Link:</strong> Operates on static subnet <code>192.168.11.0/24</code> without competing with WiFi or ROS 2 Zenoh/DDS traffic.</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="subsystem-card-data">
+              <div class="data-block">
+                <span class="data-title">Optical & Network Specifications</span>
+                <table class="specs-table">
+                  <tr><td>Detection Range</td><td><strong>0.05 m to 30.0 m</strong> (white target)</td></tr>
+                  <tr><td>Sampling Frequency</td><td><strong>32 kHz</strong> (DenseBoost mode)</td></tr>
+                  <tr><td>Scan Frequency</td><td><strong>10 Hz</strong> (600 RPM)</td></tr>
+                  <tr><td>Angular Resolution</td><td><strong>≈0.112°</strong></td></tr>
+                  <tr><td>Network Protocol</td><td><strong>UDP Sockets</strong> (Port 8089)</td></tr>
+                  <tr><td>Laser Safety</td><td><strong>Class 1 (IEC-60825-1) Eye-safe</strong></td></tr>
+                  <tr><td>Chassis Blind-Zone Filter</td><td><strong>0.28 m radius</strong> (avoids robot frame hits)</td></tr>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-content" id="tab-imu">
+          <div class="subsystem-card-grid">
+            <div class="subsystem-card-text">
+              <h3>Bosch BNO055 9-DOF IMU + Dedicated Mega</h3>
+              <p>Achieving stable SLAM in indoor environments requires sub-millisecond orientation tracking. The <strong>Bosch BNO055</strong> fuses a triaxial 14-bit accelerometer, 16-bit gyroscope, and geomagnetic sensor through its onboard BSX sensor fusion coprocessor.</p>
+              
+              <div class="feature-bullets">
+                <div class="bullet-item">
+                  <span class="bullet-icon">✔</span>
+                  <div><strong>Arduino Mega Serial Offloader:</strong> The Mega reads orientation quaternions and angular velocity over hardware I2C/UART and streams to the Pi at 500,000 baud.</div>
+                </div>
+                <div class="bullet-item">
+                  <span class="bullet-icon">✔</span>
+                  <div><strong>Timestamp Determinism:</strong> Offloading sensor polling to a dedicated MCU guarantees jitter-free 50 Hz ROS 2 <code>sensor_msgs/Imu</code> messages.</div>
+                </div>
+                <div class="bullet-item">
+                  <span class="bullet-icon">✔</span>
+                  <div><strong>EKF Fusion:</strong> Fuses with <code>/odom_raw</code> in <code>ekf.yaml</code> to feed Nav2 and SLAM Toolbox with audited <code>odom → base_footprint</code> transforms.</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="subsystem-card-data">
+              <div class="data-block">
+                <span class="data-title">IMU Telemetry Specifications</span>
+                <table class="specs-table">
+                  <tr><td>Sensor Model</td><td><strong>Bosch BNO055 Absolute Orientation</strong></td></tr>
+                  <tr><td>DOF (Degrees of Freedom)</td><td><strong>9-DOF</strong> (Accel, Gyro, Mag)</td></tr>
+                  <tr><td>Hardware Streamer</td><td><strong>Arduino Mega 2560</strong> (/dev/ttyACM1)</td></tr>
+                  <tr><td>Serial Baud Rate</td><td><strong>500,000 Baud</strong> (8N1)</td></tr>
+                  <tr><td>Published Topic</td><td><strong>/imu</strong> (sensor_msgs/Imu) @ 50 Hz</td></tr>
+                  <tr><td>Orientation Accuracy</td><td><strong>±0.5° pitch/roll, ±1.0° yaw (fused)</strong></td></tr>
+                  <tr><td>Calibration State</td><td>Sys: 3, Gyro: 3, Accel: 3, Mag: 3</td></tr>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-content" id="tab-camera">
+          <div class="subsystem-card-grid">
+            <div class="subsystem-card-text">
+              <h3>2-DOF Active Vision Gimbal & Audio Alert</h3>
+              <p>For open-vocabulary semantic mapping (YOLO-World), the robot features an active pan/tilt camera head carrying a <strong>Raspberry Pi Camera Module 3</strong>, driven by an Arduino Uno with Timer 1 hardware PWM.</p>
+              
+              <div class="feature-bullets">
+                <div class="bullet-item">
+                  <span class="bullet-icon">✔</span>
+                  <div><strong>Jitter-Free Timer PWM:</strong> The Uno hardware timers generate rock-steady 50 Hz servo pulses, so camera stability remains intact even when Nav2 & YOLO load all Pi cores.</div>
+                </div>
+                <div class="bullet-item">
+                  <span class="bullet-icon">✔</span>
+                  <div><strong>Continuous Pan + Positional Tilt:</strong> OT5320M 20kg-class high-torque servo for 360° pan speed/direction, paired with an SG90 servo for vertical pitch.</div>
+                </div>
+                <div class="bullet-item">
+                  <span class="bullet-icon">✔</span>
+                  <div><strong>Acoustic Proximity Alarm:</strong> A piezo buzzer on Pin D9 beeps dynamically when LiDAR measures obstacles under 45 cm (fading duty cycle up to 30 cm).</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="subsystem-card-data">
+              <div class="data-block">
+                <span class="data-title">Optics & Actuation Specs</span>
+                <table class="specs-table">
+                  <tr><td>Optical Sensor</td><td><strong>Sony IMX708</strong> (11.9 MP, Autofocus)</td></tr>
+                  <tr><td>Horizontal FOV</td><td><strong>66° HFOV</strong> (wide angle)</td></tr>
+                  <tr><td>Pan Actuator</td><td><strong>OT5320M</strong> (Pin D6, 7.4V external)</td></tr>
+                  <tr><td>Tilt Actuator</td><td><strong>SG90 Micro</strong> (Pin D5, 5V external)</td></tr>
+                  <tr><td>Proximity Buzzer</td><td><strong>Pin D9</strong> (Timer 1 Hardware PWM)</td></tr>
+                  <tr><td>MCU Interface</td><td><strong>Arduino Uno</strong> (/dev/ttyUSB0 @ 115200)</td></tr>
+                  <tr><td>Command Latency</td><td><strong>&lt; 5 ms</strong> (ASCII protocol)</td></tr>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-content" id="tab-compute">
+          <div class="subsystem-card-grid">
+            <div class="subsystem-card-text">
+              <h3>Central Processing Unit: Raspberry Pi 5</h3>
+              <p>The entire perception, localization, mapping, navigation, and web telemetry stack runs natively on a <strong>Raspberry Pi 5 single-board computer</strong> with Ubuntu 24.04 LTS and ROS 2 Jazzy.</p>
+              
+              <div class="feature-bullets">
+                <div class="bullet-item">
+                  <span class="bullet-icon">✔</span>
+                  <div><strong>Real-Time Pipeline:</strong> Runs SLAM Toolbox async mapper, EKF fusion, Nav2 stack, frontier explorer, and safety stop concurrently.</div>
+                </div>
+                <div class="bullet-item">
+                  <span class="bullet-icon">✔</span>
+                  <div><strong>Semantic AI Acceleration:</strong> YOLO-World open-vocabulary object identification streaming 640×480 frames from Camera Module 3.</div>
+                </div>
+                <div class="bullet-item">
+                  <span class="bullet-icon">✔</span>
+                  <div><strong>Integrated Web Server:</strong> Self-hosted lightweight Python HTTP server on port 8080 providing live WebSockets/SSE telemetry.</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="subsystem-card-data">
+              <div class="data-block">
+                <span class="data-title">SBC Compute Specifications</span>
+                <table class="specs-table">
+                  <tr><td>Processor</td><td><strong>Broadcom BCM2712</strong> (4× Cortex-A76 @ 2.4 GHz)</td></tr>
+                  <tr><td>System Memory</td><td><strong>8 GB LPDDR4X-4267 SDRAM</strong></td></tr>
+                  <tr><td>Operating System</td><td><strong>Ubuntu 24.04 LTS 64-bit</strong></td></tr>
+                  <tr><td>ROS Distribution</td><td><strong>ROS 2 Jazzy Jalisco</strong></td></tr>
+                  <tr><td>Cooling</td><td><strong>Raspberry Pi Active Cooler</strong> (PWM Fan + Heatsink)</td></tr>
+                  <tr><td>Power Input</td><td><strong>5V / 5A DC</strong> via USB-C (High-Current Buck)</td></tr>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 5: ELECTRICAL WIRING, PINOUTS & PORT MAPPING -->
+    <section class="section-container" id="wiring-pinouts">
+      <div class="section-header">
+        <span class="section-tag">BENCH WIRING GUIDE</span>
+        <h2 class="section-title">Electrical Connections & Serial Port Mapping</h2>
+        <p class="section-subtitle">Precise pin assignments, voltage rails, and udev rules to wire and maintain the hardware.</p>
+      </div>
+
+      <div class="wiring-layout-grid">
+        <!-- Wiring Table -->
+        <div class="wiring-table-card">
+          <div class="card-header-flex">
+            <h3>Hardware Port & Voltage Assignment</h3>
+            <span class="badge-accent">CRITICAL BENCH REFERENCE</span>
+          </div>
+
+          <div class="table-responsive">
+            <table class="master-wiring-table">
+              <thead>
+                <tr>
+                  <th>Subsystem</th>
+                  <th>Hardware Device</th>
+                  <th>Physical Port / Pins</th>
+                  <th>Protocol & Baud</th>
+                  <th>Supply Voltage</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><span class="tag-subsystem orange">Drive</span></td>
+                  <td>2× DDSM115 Hubs</td>
+                  <td><code>/dev/ttyACM0</code> (USB-RS485 Dongle)</td>
+                  <td>RS485 (115200 8N1)</td>
+                  <td><strong>12V – 24V DC</strong> (Battery Bus)</td>
+                </tr>
+                <tr>
+                  <td><span class="tag-subsystem cyan">LiDAR</span></td>
+                  <td>RPLidar S2E</td>
+                  <td><code>eth0</code> (RJ45 Native Port)</td>
+                  <td>UDP (192.168.11.2:8089)</td>
+                  <td><strong>9V – 12V DC</strong> (Step-down)</td>
+                </tr>
+                <tr>
+                  <td><span class="tag-subsystem yellow">IMU</span></td>
+                  <td>Arduino Mega + BNO055</td>
+                  <td><code>/dev/ttyACM1</code> (USB Serial)</td>
+                  <td>UART (500,000 baud)</td>
+                  <td><strong>5V DC</strong> (USB Bus)</td>
+                </tr>
+                <tr>
+                  <td><span class="tag-subsystem green">Gimbal</span></td>
+                  <td>Arduino Uno Head Driver</td>
+                  <td><code>/dev/ttyUSB0</code> (USB Serial)</td>
+                  <td>UART (115,200 baud)</td>
+                  <td><strong>5V DC</strong> (USB Bus)</td>
+                </tr>
+                <tr>
+                  <td><span class="tag-subsystem green">Pan Servo</span></td>
+                  <td>OT5320M Continuous</td>
+                  <td>Uno Pin <strong>D6</strong> (Signal)</td>
+                  <td>50 Hz PWM (500–2500 µs)</td>
+                  <td><strong>7.4V DC External</strong> (NOT Uno!)</td>
+                </tr>
+                <tr>
+                  <td><span class="tag-subsystem green">Tilt Servo</span></td>
+                  <td>SG90 Micro Servo</td>
+                  <td>Uno Pin <strong>D5</strong> (Signal)</td>
+                  <td>50 Hz PWM (Positional)</td>
+                  <td><strong>5.0V DC External</strong></td>
+                </tr>
+                <tr>
+                  <td><span class="tag-subsystem red">Alert</span></td>
+                  <td>Proximity Piezo Buzzer</td>
+                  <td>Uno Pin <strong>D9</strong> (Timer 1 PWM)</td>
+                  <td>Duty 0–255 (45cm–30cm)</td>
+                  <td>Uno 5V Rail</td>
+                </tr>
+                <tr>
+                  <td><span class="tag-subsystem purple">Vision</span></td>
+                  <td>RPi Camera Module 3</td>
+                  <td>Pi 5 CAM/DISP 0 Ribbon</td>
+                  <td>MIPI CSI-2 2-Lane</td>
+                  <td>Internal 3.3V Bus</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Udev Rules & Electrical Warnings -->
+        <div class="wiring-side-card">
+          <div class="warning-callout">
+            <div class="warning-icon">⚠</div>
+            <div class="warning-text">
+              <h4>Strict Voltage Isolation Warning</h4>
+              <p>Never power the 20kg OT5320M pan servo from the Arduino Uno 5V pin! Stall currents will brown out the microcontroller and corrupt the serial link. Always tie Servo GND, Battery GND, and Uno GND together.</p>
+            </div>
+          </div>
+
+          <div class="code-box-card">
+            <div class="code-box-header">
+              <span>Persistent Udev Port Rules (Avoid ACM Swapping)</span>
+              <button class="btn-copy-code" data-target="udevCodeBlock" id="btnCopyUdev">Copy</button>
+            </div>
+            <pre id="udevCodeBlock"><code># Check persistent hardware paths:
+ls -l /dev/serial/by-id/
+
+# /etc/udev/rules.d/99-ros-robot.rules
+SUBSYSTEM=="tty", ATTRS{idVendor}=="1a86", ATTRS{idProduct}=="7523", SYMLINK+="robot_motors"
+SUBSYSTEM=="tty", ATTRS{idVendor}=="2341", ATTRS{idProduct}=="0042", SYMLINK+="robot_imu"
+SUBSYSTEM=="tty", ATTRS{idVendor}=="2341", ATTRS{idProduct}=="0043", SYMLINK+="robot_camera_head"</code></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 6: BINARY PROTOCOL & PACKET INSPECTOR -->
+    <section class="section-container" id="protocol-inspector">
+      <div class="section-header">
+        <span class="section-tag">LOW-LEVEL PACKET DEBUGGER</span>
+        <h2 class="section-title">Binary Packet Inspector & Protocol Simulator</h2>
+        <p class="section-subtitle">Test and verify the exact 10-byte CRC-8/MAXIM serial frames transmitted to the DDSM115 hub motors, and preview ASCII commands for the camera head.</p>
+      </div>
+
+      <div class="protocol-grid">
+        <!-- DDSM115 10-Byte Packet Generator -->
+        <div class="protocol-card">
+          <div class="card-header-flex">
+            <h3>DDSM115 10-Byte Motor Packet Builder</h3>
+            <span class="badge-chip">CRC-8/MAXIM POLYNOMIAL 0x8C</span>
+          </div>
+          <p class="card-hint">Adjust the motor ID and target RPM to watch the exact 10-byte binary frame and check byte calculate in real time.</p>
+
+          <div class="packet-controls-grid">
+            <div class="control-field">
+              <label for="packetMotorId">Target Motor ID:</label>
+              <select id="packetMotorId" class="input-select">
+                <option value="1">Motor 0x01 (Left Wheel)</option>
+                <option value="2">Motor 0x02 (Right Wheel)</option>
+              </select>
+            </div>
+
+            <div class="control-field">
+              <label for="packetRpmInput">Target Velocity (RPM): <span id="rpmDisplayVal" class="code-val">30 RPM</span></label>
+              <input type="range" id="packetRpmInput" min="-115" max="115" value="30" class="input-slider">
+            </div>
+
+            <div class="control-field">
+              <label for="packetRamp">Acceleration Ramp:</label>
+              <input type="number" id="packetRamp" min="0" max="255" value="0" class="input-number">
+            </div>
+          </div>
+
+          <!-- Interactive 10-Byte Visualizer -->
+          <div class="byte-stream-visualizer">
+            <div class="byte-box" id="b0"><span class="b-idx">B0 (ID)</span><span class="b-val">0x01</span></div>
+            <div class="byte-box" id="b1"><span class="b-idx">B1 (CMD)</span><span class="b-val">0x64</span></div>
+            <div class="byte-box" id="b2"><span class="b-idx">B2 (RPM-H)</span><span class="b-val">0x00</span></div>
+            <div class="byte-box" id="b3"><span class="b-idx">B3 (RPM-L)</span><span class="b-val">0x1E</span></div>
+            <div class="byte-box" id="b4"><span class="b-idx">B4 (RES)</span><span class="b-val">0x00</span></div>
+            <div class="byte-box" id="b5"><span class="b-idx">B5 (RES)</span><span class="b-val">0x00</span></div>
+            <div class="byte-box" id="b6"><span class="b-idx">B6 (RES)</span><span class="b-val">0x00</span></div>
+            <div class="byte-box" id="b7"><span class="b-idx">B7 (BRAKE)</span><span class="b-val">0x00</span></div>
+            <div class="byte-box" id="b8"><span class="b-idx">B8 (RAMP)</span><span class="b-val">0x00</span></div>
+            <div class="byte-box highlight-crc" id="b9"><span class="b-idx">B9 (CRC8)</span><span class="b-val" id="crcDisplayHex">0x??</span></div>
+          </div>
+
+          <div class="packet-hex-result">
+            <span class="hex-label">Complete Hex Stream:</span>
+            <code id="fullPacketHexDisplay">01 64 00 1E 00 00 00 00 00 3C</code>
+            <button class="btn-copy-sm" id="btnCopyHex">Copy Hex</button>
+          </div>
+        </div>
+
+        <!-- Camera Head & Buzzer Protocol Tester -->
+        <div class="protocol-card">
+          <div class="card-header-flex">
+            <h3>Camera Head & Proximity Buzzer Simulator</h3>
+            <span class="badge-chip">ASCII 115200 8N1</span>
+          </div>
+          <p class="card-hint">Simulate the command strings sent to the Arduino Uno (<code>camera_head.ino</code>).</p>
+
+          <div class="gimbal-controls-grid">
+            <div class="control-field">
+              <label for="sliderPanUs">Pan Servo Pulse Width: <span id="valPanUs" class="code-val">1500 µs</span></label>
+              <input type="range" id="sliderPanUs" min="500" max="2500" value="1500" class="input-slider">
+            </div>
+
+            <div class="control-field">
+              <label for="sliderTiltUs">Tilt Servo Pulse Width: <span id="valTiltUs" class="code-val">1500 µs</span></label>
+              <input type="range" id="sliderTiltUs" min="500" max="2500" value="1500" class="input-slider">
+            </div>
+
+            <div class="control-field">
+              <label for="sliderBuzzer">Proximity Buzzer Duty (0-255): <span id="valBuzzerDuty" class="code-val">0 (Silent)</span></label>
+              <input type="range" id="sliderBuzzer" min="0" max="255" value="0" class="input-slider">
+            </div>
+          </div>
+
+          <div class="stream-output-box">
+            <div class="stream-item">
+              <span class="stream-label">UART Transmission:</span>
+              <code id="asciiStreamOutput">P1500\nT1500\nB0\n</code>
+            </div>
+            <div class="buzzer-status-pill" id="buzzerPill">
+              <span class="buzzer-wave"></span>
+              <span id="buzzerStatusLabel">BUZZER SILENT (Distance &gt; 45cm)</span>
+              <button class="btn-audio-test" id="btnPlayBeep" title="Play simulated audio beep">🔊 Audio Preview</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 7: INTERACTIVE ENGINEERING CALCULATORS -->
+    <section class="section-container" id="calculators">
+      <div class="section-header">
+        <span class="section-tag">ENGINEERING UTILITIES</span>
+        <h2 class="section-title">Differential Kinematics & Power Calculators</h2>
+        <p class="section-subtitle">Real-time tools derived from the exact physical geometry (wheel diameter 100.7mm, wheelbase 0.33m) and electrical load profiles.</p>
+      </div>
+
+      <div class="calc-grid">
+        <!-- Calculator 1: Differential Drive Kinematics -->
+        <div class="calc-card">
+          <div class="calc-header">
+            <h3>Differential Drive Speed & RPM Calculator</h3>
+            <span class="calc-badge">KINEMATICS</span>
+          </div>
+
+          <div class="calc-body">
+            <div class="input-row">
+              <div class="input-group">
+                <label for="calcVx">Linear Velocity $v_x$ (m/s)</label>
+                <input type="number" id="calcVx" value="0.25" step="0.05" min="-0.60" max="0.60" class="calc-input">
+              </div>
+              <div class="input-group">
+                <label for="calcWz">Angular Velocity $\omega_z$ (rad/s)</label>
+                <input type="number" id="calcWz" value="0.40" step="0.05" min="-2.0" max="2.0" class="calc-input">
+              </div>
+            </div>
+
+            <div class="calc-results-panel">
+              <div class="res-item">
+                <span class="res-label">Left Motor Target RPM:</span>
+                <span class="res-value" id="resLeftRpm">0.0 RPM</span>
+              </div>
+              <div class="res-item">
+                <span class="res-label">Right Motor Target RPM:</span>
+                <span class="res-value" id="resRightRpm">0.0 RPM</span>
+              </div>
+              <div class="res-item">
+                <span class="res-label">Left Wheel Linear Speed:</span>
+                <span class="res-value" id="resLeftSpeed">0.0 m/s</span>
+              </div>
+              <div class="res-item">
+                <span class="res-label">Right Wheel Linear Speed:</span>
+                <span class="res-value" id="resRightSpeed">0.0 m/s</span>
+              </div>
+              <div class="res-item warning-highlight" id="deadzoneWarning" style="display:none;">
+                <span>⚠ WARNING: RPM is below 6 RPM deadzone threshold. Motor may stall without feedforward ramp!</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Calculator 2: Battery Runtime & Power Distribution -->
+        <div class="calc-card">
+          <div class="calc-header">
+            <h3>Battery Endurance & Power Estimator</h3>
+            <span class="calc-badge">ELECTRICAL</span>
+          </div>
+
+          <div class="calc-body">
+            <div class="input-row">
+              <div class="input-group">
+                <label for="batteryVoltage">Battery Chemistry & Voltage</label>
+                <select id="batteryVoltage" class="calc-input">
+                  <option value="14.8" selected>4S LiPo / LiFePO4 (14.8V Nominal)</option>
+                  <option value="11.1">3S LiPo (11.1V Nominal)</option>
+                  <option value="22.2">6S LiPo (22.2V Nominal)</option>
+                </select>
+              </div>
+              <div class="input-group">
+                <label for="batteryCapacity">Capacity (mAh)</label>
+                <input type="number" id="batteryCapacity" value="5000" step="500" min="1000" max="30000" class="calc-input">
+              </div>
+            </div>
+
+            <div class="input-row">
+              <div class="input-group">
+                <label for="robotMissionMode">Robot Mission Profile</label>
+                <select id="robotMissionMode" class="calc-input">
+                  <option value="active_mapping" selected>Active Autonomous SLAM & Nav2 (Moderate Motion)</option>
+                  <option value="heavy_vision">Autonomous SLAM + YOLO-World Camera Head</option>
+                  <option value="idle_bench">Idle Bench Testing (Pi 5 + LiDAR only)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="calc-results-panel">
+              <div class="res-item">
+                <span class="res-label">Average Total Power Draw:</span>
+                <span class="res-value" id="resPowerDraw">28.5 W</span>
+              </div>
+              <div class="res-item">
+                <span class="res-label">Estimated Continuous Runtime:</span>
+                <span class="res-value highlight-green-text" id="resRuntime">2.6 Hours</span>
+              </div>
+              <div class="res-item">
+                <span class="res-label">Continuous Current Draw:</span>
+                <span class="res-value" id="resCurrentDraw">1.92 A @ 14.8V</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 8: COMPLETE BILL OF MATERIALS (BOM) -->
+    <section class="section-container" id="bom-section">
+      <div class="section-header">
+        <span class="section-tag">HARDWARE SOURCING MATRIX</span>
+        <h2 class="section-title">Bill of Materials (BOM) & Components</h2>
+        <p class="section-subtitle">Full list of components required to replicate the Ros_lidar_bot physical hardware architecture.</p>
+      </div>
+
+      <div class="bom-controls-bar">
+        <div class="bom-search-box">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <input type="text" id="bomSearchInput" placeholder="Filter components (e.g. LiDAR, Motor, Arduino)...">
+        </div>
+        <div class="bom-filter-chips">
+          <button class="filter-chip active" data-category="all">All</button>
+          <button class="filter-chip" data-category="compute">Compute</button>
+          <button class="filter-chip" data-category="actuation">Actuation</button>
+          <button class="filter-chip" data-category="sensors">Sensors</button>
+          <button class="filter-chip" data-category="power">Power</button>
+        </div>
+        <button class="btn-export-csv" id="btnExportBom">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          <span>Export CSV</span>
+        </button>
+      </div>
+
+      <div class="bom-table-wrapper">
+        <table class="bom-table" id="bomTable">
+          <thead>
+            <tr>
+              <th>Part Name</th>
+              <th>Category</th>
+              <th>Key Technical Detail</th>
+              <th>Qty</th>
+              <th>Interface</th>
+              <th>Role in Stack</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr data-category="compute">
+              <td><strong>Raspberry Pi 5 (8GB)</strong></td>
+              <td><span class="tag-cat compute">Compute</span></td>
+              <td>Broadcom BCM2712 Quad Cortex-A76 @ 2.4GHz</td>
+              <td>1</td>
+              <td>Gigabit Eth, USB 3.0, CSI</td>
+              <td>Runs Ubuntu 24.04, ROS 2 Jazzy, SLAM, Nav2</td>
+            </tr>
+            <tr data-category="actuation">
+              <td><strong>DDSM115 Direct-Drive Motors</strong></td>
+              <td><span class="tag-cat actuation">Actuation</span></td>
+              <td>⌀100.7mm wheel, RS485 half-duplex, 1.2Nm</td>
+              <td>2</td>
+              <td>RS485 (10-byte binary CRC8)</td>
+              <td>Differential propulsion, zero gearbox backlash</td>
+            </tr>
+            <tr data-category="actuation">
+              <td><strong>Industrial USB-to-RS485 Dongle</strong></td>
+              <td><span class="tag-cat actuation">Actuation</span></td>
+              <td>FTDI/CH340 chipset, TVS diode protection</td>
+              <td>1</td>
+              <td><code>/dev/ttyACM0</code> (115200)</td>
+              <td>Bridges Pi USB port to RS485 motor bus</td>
+            </tr>
+            <tr data-category="sensors">
+              <td><strong>Slamtec RPLidar S2E</strong></td>
+              <td><span class="tag-cat sensors">Sensors</span></td>
+              <td>30m range, 32kHz sample, DenseBoost mode</td>
+              <td>1</td>
+              <td><strong>RJ45 Ethernet UDP</strong> (192.168.11.2)</td>
+              <td>Real-time 2D laser SLAM, safety stop filter</td>
+            </tr>
+            <tr data-category="sensors">
+              <td><strong>Bosch BNO055 9-DOF IMU</strong></td>
+              <td><span class="tag-cat sensors">Sensors</span></td>
+              <td>On-chip BSX fusion, triaxial accel/gyro/mag</td>
+              <td>1</td>
+              <td>I2C/UART to Arduino Mega</td>
+              <td>Provides absolute orientation to EKF filter</td>
+            </tr>
+            <tr data-category="compute">
+              <td><strong>Arduino Mega 2560 R3</strong></td>
+              <td><span class="tag-cat compute">Compute</span></td>
+              <td>ATmega2560, 16MHz, multiple hardware UARTs</td>
+              <td>1</td>
+              <td><code>/dev/ttyACM1</code> (500,000 baud)</td>
+              <td>Reads BNO055 and streams jitter-free 50Hz /imu</td>
+            </tr>
+            <tr data-category="sensors">
+              <td><strong>Raspberry Pi Camera Module 3</strong></td>
+              <td><span class="tag-cat sensors">Sensors</span></td>
+              <td>Sony IMX708 11.9MP, Autofocus, 66° HFOV</td>
+              <td>1</td>
+              <td>MIPI CSI-2 Ribbon</td>
+              <td>Feeds 640×480 frames to YOLO-World detector</td>
+            </tr>
+            <tr data-category="actuation">
+              <td><strong>OT5320M Continuous Servo</strong></td>
+              <td><span class="tag-cat actuation">Actuation</span></td>
+              <td>20kg·cm metal gear continuous rotation</td>
+              <td>1</td>
+              <td>Uno Pin D6 (50Hz PWM)</td>
+              <td>360° horizontal camera pan gimbal</td>
+            </tr>
+            <tr data-category="actuation">
+              <td><strong>SG90 Micro Servo</strong></td>
+              <td><span class="tag-cat actuation">Actuation</span></td>
+              <td>9g analog positional micro-servo</td>
+              <td>1</td>
+              <td>Uno Pin D5 (50Hz PWM)</td>
+              <td>Vertical camera pitch / elevation</td>
+            </tr>
+            <tr data-category="compute">
+              <td><strong>Arduino Uno R3</strong></td>
+              <td><span class="tag-cat compute">Compute</span></td>
+              <td>ATmega328P, Timer 1 hardware PWM</td>
+              <td>1</td>
+              <td><code>/dev/ttyUSB0</code> (115200 ASCII)</td>
+              <td>Gimbal servo controller & buzzer pulse generator</td>
+            </tr>
+            <tr data-category="sensors">
+              <td><strong>Piezo Acoustic Buzzer (5V)</strong></td>
+              <td><span class="tag-cat sensors">Sensors</span></td>
+              <td>Active/Passive transducer driven via Timer 1</td>
+              <td>1</td>
+              <td>Uno Pin D9 (analogWrite)</td>
+              <td>Audible collision alarm (&lt; 45cm proximity)</td>
+            </tr>
+            <tr data-category="power">
+              <td><strong>DC-DC Step-Down Buck (5V/5A)</strong></td>
+              <td><span class="tag-cat power">Power</span></td>
+              <td>High-efficiency synchronous buck converter</td>
+              <td>1</td>
+              <td>Battery → Pi 5 Power</td>
+              <td>Powers Raspberry Pi 5 without low-voltage warnings</td>
+            </tr>
+            <tr data-category="power">
+              <td><strong>DC-DC Step-Down Buck (7.4V/3A)</strong></td>
+              <td><span class="tag-cat power">Power</span></td>
+              <td>Adjustable buck regulator</td>
+              <td>1</td>
+              <td>Battery → OT5320M Servo</td>
+              <td>Dedicated high-current servo power rail</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SECTION 9: BRING-UP & CALIBRATION MANUAL -->
+    <section class="section-container" id="bringup">
+      <div class="section-header">
+        <span class="section-tag">COMMISSIONING MANUAL</span>
+        <h2 class="section-title">Hardware Bring-Up & Calibration Steps</h2>
+        <p class="section-subtitle">Official sequential procedure to calibrate sensors and launch the physical robot.</p>
+      </div>
+
+      <div class="bringup-steps-grid">
+        <div class="step-card">
+          <div class="step-num">01</div>
+          <div class="step-content">
+            <h4>Static IP Network Configuration for RPLidar S2E</h4>
+            <p>The S2E communicates over Ethernet UDP. Assign a static IP on the Pi's <code>eth0</code> port matching the LiDAR's subnet:</p>
+            <div class="terminal-cmd">
+              <code>sudo nmcli con add type ethernet ifname eth0 con-name lidar ipv4.method manual ipv4.addresses 192.168.11.1/24<br>ping 192.168.11.2</code>
+              <button class="btn-copy-cmd" data-cmd="sudo nmcli con add type ethernet ifname eth0 con-name lidar ipv4.method manual ipv4.addresses 192.168.11.1/24; ping 192.168.11.2">Copy</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-num">02</div>
+          <div class="step-content">
+            <h4>Flash Microcontroller Firmware</h4>
+            <p>Flash the Arduino Uno and Mega sketches before launching ROS 2:</p>
+            <ul>
+              <li><strong>Arduino Uno:</strong> Flash <code>arduino/camera_head/camera_head.ino</code> to establish 115,200 baud ASCII servo control.</li>
+              <li><strong>Arduino Mega:</strong> Flash BNO055 high-speed serial firmware streaming at 500,000 baud.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-num">03</div>
+          <div class="step-content">
+            <h4>Bench Motor Verification (Without Safety Filter)</h4>
+            <p>Test wheel rotation on a stand before autonomous movement:</p>
+            <div class="terminal-cmd">
+              <code>ros2 run Ros_lidar_bot driver_node --ros-args -p cmd_vel_topic:=/cmd_vel</code>
+              <button class="btn-copy-cmd" data-cmd="ros2 run Ros_lidar_bot driver_node --ros-args -p cmd_vel_topic:=/cmd_vel">Copy</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-num">04</div>
+          <div class="step-content">
+            <h4>Full Hardware Bringup</h4>
+            <p>Start the hardware drivers, safety stop, SLAM Toolbox, and web dashboard:</p>
+            <div class="terminal-cmd">
+              <code>ros2 launch Ros_lidar_bot launch_robot.launch.py</code>
+              <button class="btn-copy-cmd" data-cmd="ros2 launch Ros_lidar_bot launch_robot.launch.py">Copy</button>
+            </div>
+            <p class="step-note">Then connect to <strong>http://&lt;robot-ip&gt;:8080</strong> in your browser.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 10: DIAGNOSTICS & TROUBLESHOOTING -->
+    <section class="section-container" id="troubleshooting">
+      <div class="section-header">
+        <span class="section-tag">FIELD REPAIR GUIDE</span>
+        <h2 class="section-title">Hardware Diagnostics & Troubleshooting</h2>
+        <p class="section-subtitle">Direct solutions to known hardware failure states and bus issues.</p>
+      </div>
+
+      <div class="troubleshooting-accordion">
+        <div class="accordion-item">
+          <button class="accordion-header">
+            <span class="acc-title">TF Chain Missing (map → odom or odom → base_footprint)</span>
+            <span class="acc-icon">+</span>
+          </button>
+          <div class="accordion-body">
+            <p><strong>Root Cause:</strong> A stale previous launch instance is locking the serial ports (<code>/dev/ttyACM*</code>) or HTTP port 8080.</p>
+            <p><strong>Fix:</strong> Kill all lingering nodes and verify port release:</p>
+            <pre><code>pkill -9 -f "ros2 launch"; pkill -9 -f _node
+fuser -v /dev/ttyACM* 8080/tcp</code></pre>
+          </div>
+        </div>
+
+        <div class="accordion-item">
+          <button class="accordion-header">
+            <span class="acc-title">Driver Node Up but Wheels Refuse to Spin</span>
+            <span class="acc-icon">+</span>
+          </button>
+          <div class="accordion-body">
+            <p><strong>Root Cause:</strong> <code>driver_node.py</code> strictly listens to <code>/cmd_vel_safe</code>, not <code>/cmd_vel</code>. If <code>safety_stop_node</code> has not started or an obstacle is within <code>min_safe_distance</code> (0.40m), all forward/reverse commands are zeroed.</p>
+            <p><strong>Check:</strong> Verify command flow with <code>ros2 topic hz /cmd_vel_safe</code> and check <code>/safety_blocked</code>.</p>
+          </div>
+        </div>
+
+        <div class="accordion-item">
+          <button class="accordion-header">
+            <span class="acc-title">Robot Plans Paths but Never Drives (False Positive Obstacles)</span>
+            <span class="acc-icon">+</span>
+          </button>
+          <div class="accordion-body">
+            <p><strong>Root Cause:</strong> LiDAR laser rays are bouncing off the robot chassis, tripping the safety stop node.</p>
+            <p><strong>Fix:</strong> Ensure <code>ignore_below</code> in <code>safety_stop_node.py</code> is set to at least the chassis radius (<strong>0.28 m</strong>).</p>
+          </div>
+        </div>
+
+        <div class="accordion-item">
+          <button class="accordion-header">
+            <span class="acc-title">DenseBoost Scan Timestamp Lag / SLAM Smear During Fast Spins</span>
+            <span class="acc-icon">+</span>
+          </button>
+          <div class="accordion-body">
+            <p><strong>Root Cause:</strong> Due to dense point-cloud volume (~3200 pts/rev), scan-matching runs ~0.6s behind on the Pi 5 during rapid rotations.</p>
+            <p><strong>Fix:</strong> Maintain <code>transform_tolerance: 1.0</code> in <code>nav2_params.yaml</code> and keep angular yaw velocity under 0.8 rad/s during initial mapping.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Global Footer -->
+  <footer class="site-footer">
+    <div class="footer-container">
+      <div class="footer-left">
+        <span class="footer-logo">ROS_LIDAR_BOT</span>
+        <p class="footer-copy">Differential Direct-Drive Autonomous Robotics Platform. Built with ROS 2 Jazzy Jalisco on Raspberry Pi 5.</p>
+      </div>
+      <div class="footer-links">
+        <a href="#hero">Back to Top ↑</a>
+        <a href="#rig-explorer">Rig Explorer</a>
+        <a href="#wiring-pinouts">Wiring Guide</a>
+        <a href="#calculators">Calculators</a>
+        <a href="#bom-section">BOM Matrix</a>
+      </div>
+    </div>
+    <div class="footer-subtext">
+      <span>Hardware architecture verified against repository codebase.</span>
+    </div>
+  </footer>
+
+  <!-- Audio element for buzzer preview -->
+  <script src="app.js"></script>
+</body>
+</html>
